@@ -76,6 +76,7 @@
         button_new_game2.onclick = function () { newGame(); };
         button_setting_menu.onclick = function () { showScreen(SCREEN_SETTING); };
         button_setting_menu1.onclick = function () { showScreen(SCREEN_SETTING); };
+        
         // speed
         setSnakeSpeed(150);
         for (let i = 0; i < speed_setting.length; i++) {
@@ -87,6 +88,7 @@
                 }
             });
         }
+        
         // wall setting
         setWall(1);
         for (let i = 0; i < wall_setting.length; i++) {
@@ -98,6 +100,7 @@
                 }
             });
         }
+        
         // activate window events
         window.addEventListener("keydown", function (evt) {
             // spacebar detected
@@ -112,6 +115,7 @@
         let _x = snake[0].x;
         let _y = snake[0].y;
         snake_dir = snake_next_dir;   // read async event key
+        
         // Direction 0 - Up, 1 - Right, 2 - Down, 3 - Left
         switch (snake_dir) {
             case 0: _y--; break;
@@ -121,6 +125,7 @@
         }
         snake.pop(); // tail is removed
         snake.unshift({ x: _x, y: _y }); // head is new in new position/orientation
+        
         // Wall Checker
         if (wall === 1) {
             // Wall on, Game over test
@@ -128,7 +133,8 @@
                 showScreen(SCREEN_GAME_OVER);
                 return;
             }
-        } else {
+        } 
+        else {
             // Wall Off, Circle around
             for (let i = 0, x = snake.length; i < x; i++) {
                 if (snake[i].x < 0) {
@@ -145,6 +151,7 @@
                 }
             }
         }
+        
         // Snake vs Snake checker
         for (let i = 1; i < snake.length; i++) {
             // Game over test
@@ -153,6 +160,7 @@
                 return;
             }
         }
+        
         // Snake eats food checker
         if (checkBlock(snake[0].x, snake[0].y, food.x, food.y)) {
             snake[snake.length] = { x: snake[0].x, y: snake[0].y };
@@ -160,17 +168,21 @@
             addFood();
             activeDot(food.x, food.y);
         }
+        
         // Repaint canvas
         ctx.beginPath();
         ctx.fillStyle = "royalblue";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
         // Paint snake
         for (let i = 0; i < snake.length; i++) {
             activeDot(snake[i].x, snake[i].y);
         }
+        
         // Paint food
         activeDot(food.x, food.y);
-        // Debug
+        /
+        / Debug
         //document.getElementById("debug").innerHTML = snake_dir + " " + snake_next_dir + " " + snake[0].x + " " + snake[0].y;
         // Recursive call after speed delay, déjà vu
         setTimeout(mainLoop, snake_speed);
