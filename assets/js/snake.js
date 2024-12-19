@@ -4,25 +4,30 @@
     // Canvas & Context
     const canvas = document.getElementById("snake");
     const ctx = canvas.getContext("2d");
+    
     // HTML Game IDs
     const SCREEN_SNAKE = 0;
     const screen_snake = document.getElementById("snake");
     const ele_score = document.getElementById("score_value");
     const speed_setting = document.getElementsByName("speed");
     const wall_setting = document.getElementsByName("wall");
+    
     // HTML Screen IDs (div)
     const SCREEN_MENU = -1, SCREEN_GAME_OVER = 1, SCREEN_SETTING = 2;
     const screen_menu = document.getElementById("menu");
     const screen_game_over = document.getElementById("gameover");
     const screen_setting = document.getElementById("setting");
+    
     // HTML Event IDs (a tags)
     const button_new_game = document.getElementById("new_game");
     const button_new_game1 = document.getElementById("new_game1");
     const button_new_game2 = document.getElementById("new_game2");
     const button_setting_menu = document.getElementById("setting_menu");
     const button_setting_menu1 = document.getElementById("setting_menu1");
+    
     // Game Control
     const BLOCK = 10;   // size of block rendering
+    
     let SCREEN = SCREEN_MENU;
     let snake;
     let snake_dir;
@@ -31,6 +36,7 @@
     let food = { x: 0, y: 0 };
     let score;
     let wall;
+    
     /* Display Control */
     /////////////////////////////////////////////////////////////
     // 0 for the game
@@ -60,6 +66,7 @@
                 break;
         }
     }
+    
     /* Actions and Events  */
     /////////////////////////////////////////////////////////////
     window.onload = function () {
@@ -98,6 +105,7 @@
                 newGame();
         }, true);
     }
+    
     /* Snake is on the Go (Driver Function)  */
     /////////////////////////////////////////////////////////////
     let mainLoop = function () {
@@ -167,6 +175,7 @@
         // Recursive call after speed delay, déjà vu
         setTimeout(mainLoop, snake_speed);
     }
+    
     /* New Game setup */
     /////////////////////////////////////////////////////////////
     let newGame = function () {
@@ -188,6 +197,7 @@
         }
         mainLoop();
     }
+    
     /* Key Inputs and Actions */
     /////////////////////////////////////////////////////////////
     let changeDir = function (key) {
@@ -211,12 +221,14 @@
                 break;
         }
     }
+    
     /* Dot for Food or Snake part */
     /////////////////////////////////////////////////////////////
     let activeDot = function (x, y) {
         ctx.fillStyle = "#FFFFFF";
         ctx.fillRect(x * BLOCK, y * BLOCK, BLOCK, BLOCK);
     }
+    
     /* Random food placement */
     /////////////////////////////////////////////////////////////
     let addFood = function () {
@@ -228,16 +240,19 @@
             }
         }
     }
+    
     /* Collision Detection */
     /////////////////////////////////////////////////////////////
     let checkBlock = function (x, y, _x, _y) {
         return (x === _x && y === _y);
     }
+    
     /* Update Score */
     /////////////////////////////////////////////////////////////
     let altScore = function (score_val) {
         ele_score.innerHTML = String(score_val);
     }
+    
     /////////////////////////////////////////////////////////////
     // Change the snake speed...
     // 150 = slow
@@ -246,6 +261,7 @@
     let setSnakeSpeed = function (speed_value) {
         snake_speed = speed_value;
     }
+    
     /////////////////////////////////////////////////////////////
     let setWall = function (wall_value) {
         wall = wall_value;
