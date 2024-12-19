@@ -116,8 +116,8 @@
     let mainLoop = function () {
         let _x = snake[0].x;
         let _y = snake[0].y;
-        snake_dir = snake_next_dir;   // read async event key
-        
+        snake_dir = snake_next_dir; // read async event key
+    
         // Direction 0 - Up, 1 - Right, 2 - Down, 3 - Left
         switch (snake_dir) {
             case 0: _y--; break;
@@ -127,68 +127,57 @@
         }
         snake.pop(); // tail is removed
         snake.unshift({ x: _x, y: _y }); // head is new in new position/orientation
-        
+    
         // Wall Checker
         if (wall === 1) {
-            // Wall on, Game over test
             if (snake[0].x < 0 || snake[0].x === canvas.width / BLOCK || snake[0].y < 0 || snake[0].y === canvas.height / BLOCK) {
                 showScreen(SCREEN_GAME_OVER);
                 return;
             }
-        } 
-        else {
-            // Wall Off, Circle around
+        } else {
             for (let i = 0, x = snake.length; i < x; i++) {
-                if (snake[i].x < 0) {
-                    snake[i].x = snake[i].x + (canvas.width / BLOCK);
-                }
-                if (snake[i].x === canvas.width / BLOCK) {
-                    snake[i].x = snake[i].x - (canvas.width / BLOCK);
-                }
-                if (snake[i].y < 0) {
-                    snake[i].y = snake[i].y + (canvas.height / BLOCK);
-                }
-                if (snake[i].y === canvas.height / BLOCK) {
-                    snake[i].y = snake[i].y - (canvas.height / BLOCK);
-                }
+                if (snake[i].x < 0) snake[i].x += canvas.width / BLOCK;
+                if (snake[i].x === canvas.width / BLOCK) snake[i].x -= canvas.width / BLOCK;
+                if (snake[i].y < 0) snake[i].y += canvas.height / BLOCK;
+                if (snake[i].y === canvas.height / BLOCK) snake[i].y -= canvas.height / BLOCK;
             }
         }
-        
+    
         // Snake vs Snake checker
         for (let i = 1; i < snake.length; i++) {
-            // Game over test
             if (snake[0].x === snake[i].x && snake[0].y === snake[i].y) {
                 showScreen(SCREEN_GAME_OVER);
                 return;
             }
         }
-        
+    
         // Snake eats food checker
         if (checkBlock(snake[0].x, snake[0].y, food.x, food.y)) {
             snake[snake.length] = { x: snake[0].x, y: snake[0].y };
             altScore(++score);
             addFood();
-            activeDot(food.x, food.y);
         }
-        
-        // Repaint canvas
-        ctx.beginPath();
-        ctx.fillStyle = "royalblue";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
+    
+        // Draw alternating background
+        for (let y = 0; y < canvas.height / BLOCK; y++) {
+            for (let x = 0; x < canvas.width / BLOCK; x++) {
+                ctx.fillStyle = (x + y) % 2 === 0 ? "#AAD751" : "#A2D149";
+                ctx.fillRect(x * BLOCK, y * BLOCK, BLOCK, BLOCK);
+            }
+        }
+    
         // Paint snake
         for (let i = 0; i < snake.length; i++) {
             activeDot(snake[i].x, snake[i].y);
         }
-        
+    
         // Paint food
         activeDot(food.x, food.y);
-        // Debug
-        //document.getElementById("debug").innerHTML = snake_dir + " " + snake_next_dir + " " + snake[0].x + " " + snake[0].y;
-        // Recursive call after speed delay, déjà vu
-        drawGrid(ctx, canvas.width, BLOCK);
+    
+        // Recursive call after speed delay
         setTimeout(mainLoop, snake_speed);
-    }
+    };
+    
 
     /* Grid Logic */
     /////////////////////////////////////////////////////////////
