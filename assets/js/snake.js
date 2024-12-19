@@ -36,7 +36,9 @@
     let food = { x: 0, y: 0 };
     let score;
     let wall;
-    
+    const foodImage = new Image();
+    foodImage.src = "assets/images/mango.svg";
+
     /* Display Control */
     /////////////////////////////////////////////////////////////
     // 0 for the game
@@ -260,8 +262,12 @@
     /* Dot for Food or Snake part */
     /////////////////////////////////////////////////////////////
     let activeDot = function (x, y) {
-        ctx.fillStyle = "#FFFFFF";
-        ctx.fillRect(x * BLOCK, y * BLOCK, BLOCK, BLOCK);
+        if (x === food.x && y === food.y) {
+            ctx.drawImage(foodImage, x * BLOCK, y * BLOCK, BLOCK, BLOCK);
+        } else {
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(x * BLOCK, y * BLOCK, BLOCK, BLOCK);
+        }
     }
     
     /* Random food placement */
