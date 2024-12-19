@@ -6,6 +6,12 @@
 
     const SCREEN_SNAKE = 0, SCREEN_MENU = -1, SCREEN_GAME_OVER = 1, SCREEN_SETTING = 2;
     const screen_snake = document.getElementById("snake");
+    const ele_score = document.getElementById("score_value");
+    const speed_setting = document.getElementsByName("speed");
+    const wall_setting = document.getElementsByName("wall");
+    
+    // HTML Screen IDs (div) 
+    const SCREEN_MENU = -1, SCREEN_GAME_OVER = 1, SCREEN_SETTING = 2;
     const screen_menu = document.getElementById("menu");
     const screen_game_over = document.getElementById("gameover");
     const screen_setting = document.getElementById("setting");
