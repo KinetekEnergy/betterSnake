@@ -5,47 +5,47 @@
     const canvas = document.getElementById("snake");
     const ctx = canvas.getContext("2d");
     
-    // HTML Game IDs
-    const SCREEN_SNAKE = 0;
+    const SCREEN_SNAKE = 0, SCREEN_MENU = -1, SCREEN_GAME_OVER = 1, SCREEN_SETTING = 2;
     const screen_snake = document.getElementById("snake");
-    const ele_score = document.getElementById("score_value");
-    const speed_setting = document.getElementsByName("speed");
-    const wall_setting = document.getElementsByName("wall");
-    
-    // HTML Screen IDs (div)
-    const SCREEN_MENU = -1, SCREEN_GAME_OVER = 1, SCREEN_SETTING = 2;
     const screen_menu = document.getElementById("menu");
     const screen_game_over = document.getElementById("gameover");
     const screen_setting = document.getElementById("setting");
-    
-    // HTML Event IDs (a tags)
-    const button_new_game = document.getElementById("new_game");
-    const button_new_game1 = document.getElementById("new_game1");
-    const button_new_game2 = document.getElementById("new_game2");
-    const button_setting_menu = document.getElementById("setting_menu");
-    const button_setting_menu1 = document.getElementById("setting_menu1");
+
+    const ele_score = document.getElementById("score_value");
     
     // Game Control
     const BLOCK = 10;   // size of block rendering
     
+    // snake attributes
     let SCREEN = SCREEN_MENU;
-    let snake;
-    let snake_dir;
-    let snake_next_dir;
-    let snake_speed;
+    let snake, snake_dir, snake_next_dir, snake_speed;
+    
+    // food attributes
     let food = { x: 0, y: 0 };
-    let score;
-    let wall;
     const foodImage = new Image();
     foodImage.src = "assets/images/mango.svg";
-    const FOOD_SCALE = 1.5;
+    const FOOD_SCALE = 1;
+
+    // score and wall
+    let score = 0;
+    let wall = 1;
+
+    // boss attributes
+    let boss = null;
+    let ammo = 0;
+    let bullets = [];
+    let bossHealth = 0; // boss CURRENT health
+    const BOSS_SIZE_MULTIPLIER = 2; // Boss size multiplier compared to BLOCK
+    const INITIAL_BOSS_HEALTH = 2;
+    const BULLET_SPEED = 2;
+    const AMMO_PER_FOOD = 3;
+    const BOSS_SPAWN_THRESHOLD = 2; // the number of food the player needs to eat before boss spawns
+
+
+    let gameOver = false;
 
     /* Display Control */
     /////////////////////////////////////////////////////////////
-    // 0 for the game
-    // 1 for the main menu
-    // 2 for the settings screen
-    // 3 for the game over screen
     let showScreen = function (screen_opt) {
         SCREEN = screen_opt;
         switch (screen_opt) {
@@ -69,7 +69,28 @@
                 break;
         }
     }
-    /* Actions and Events  */
+    
+    /* Boss Spawner */
+    function spawnBoss() {
+        boss = {
+            x: Math.floor(Math.random() * ((canvas.width / BLOCK) - BOSS_SIZE_MULTIPLIER)),
+            y: Math.floor(Math.random() * ((canvas.height / BLOCK) - BOSS_SIZE_MULTIPLIER)),
+            width: BOSS_SIZE_MULTIPLIER * BLOCK,
+            height: BOSS_SIZE_MULTIPLIER * BLOCK,
+            health: INITIAL_BOSS_HEALTH
+        };
+        bossHealth = boss.health;
+        drawBossHealthBar();
+    }
+
+    function drawBossHealthBar() {
+        const healthPercentage = Math.max(0, (boss.health / INITIAL_BOSS_HEALTH) * 100);
+        ctx.fillStyle = "red";
+        ctx.fillRect(10, 10, healthPercentage * 2, 10);
+        ctx.fillStyle = "white";
+        ctx.font = "10px Arial";
+        ctx.fillText(`${boss.health}/${INITIAL_BOSS_HEALTH}`, 10, 30);
+    }
     
     /* Actions and Events  */
     /////////////////////////////////////////////////////////////
@@ -112,20 +133,34 @@
                 newGame();
         }, true);
     }
+    window.onload = function () {
+        // Initialize game
+        newGame();
+
+        window.addEventListener("keydown", function (evt) {
+            if (evt.code === "Space" && SCREEN !== SCREEN_SNAKE) newGame();
+            if (evt.code === "KeyR" && ammo > 0) shootBullet();
+        }, true);
+    };
     
     /////////////////////////////////////////////////////////////
     let mainLoop = function () {
+        if (gameOver) return;
+
         let _x = snake[0].x;
         let _y = snake[0].y;
-        snake_dir = snake_next_dir; // read async event key
-    
-        // Direction 0 - Up, 1 - Right, 2 - Down, 3 - Left
+
+        // Update direction
+        snake_dir = snake_next_dir;
+
+        // Move the snake in the current direction
         switch (snake_dir) {
-            case 0: _y--; break;
-            case 1: _x++; break;
-            case 2: _y++; break;
-            case 3: _x--; break;
+            case 0: _y--; break; // Up
+            case 1: _x++; break; // Right
+            case 2: _y++; break; // Down
+            case 3: _x--; break; // Left
         }
+
         snake.pop(); // tail is removed
         snake.unshift({ x: _x, y: _y }); // head is new in new position/orientation
     
@@ -135,7 +170,8 @@
                 showScreen(SCREEN_GAME_OVER);
                 return;
             }
-        } else {
+        } 
+        else {
             for (let i = 0, x = snake.length; i < x; i++) {
                 if (snake[i].x < 0) snake[i].x += canvas.width / BLOCK;
                 if (snake[i].x === canvas.width / BLOCK) snake[i].x -= canvas.width / BLOCK;
@@ -152,11 +188,14 @@
             }
         }
     
-        // Snake eats food checker
+        // Handle food collision
         if (checkBlock(snake[0].x, snake[0].y, food.x, food.y)) {
-            snake[snake.length] = { x: snake[0].x, y: snake[0].y };
-            altScore(++score);
+            snake.push({}); // Grow the snake
+            score++;
+            ammo += AMMO_PER_FOOD;
+            altScore(score);
             addFood();
+            if (score === BOSS_SPAWN_THRESHOLD && !boss) spawnBoss(); // Spawn boss when score reaches 15
         }
     
         // Draw alternating background
@@ -167,13 +206,29 @@
             }
         }
     
-        // Paint snake
-        for (let i = 0; i < snake.length; i++) {
-            activeDot(snake[i].x, snake[i].y);
-        }
+        // Draw snake
+        snake.forEach(part => activeDot(part.x, part.y));
     
         // Paint food
         activeDot(food.x, food.y);
+
+        // Draw boss if active
+        if (boss) {
+            ctx.fillStyle = "red";
+            ctx.fillRect(boss.x * BLOCK, boss.y * BLOCK, boss.width, boss.height);
+            drawBossHealthBar();
+        }
+
+        // Update and draw bullets
+        updateBullets();
+        bullets.forEach(bullet => activeDot(bullet.x, bullet.y));
+
+        // Check boss collision with snake
+        if (boss && snake[0].x >= boss.x && snake[0].x < boss.x + BOSS_SIZE_MULTIPLIER &&
+            snake[0].y >= boss.y && snake[0].y < boss.y + BOSS_SIZE_MULTIPLIER) {
+            showScreen(SCREEN_GAME_OVER);
+            gameOver = true;
+        }
     
         // Recursive call after speed delay
         setTimeout(mainLoop, snake_speed);
@@ -209,13 +264,22 @@
         // snake game screen
         showScreen(SCREEN_SNAKE);
         screen_snake.focus();
+        
         // game score to zero
         score = 0;
+        ammo = 0;
+        boss = null;
+        bullets = [];
+        gameOver = false;
         altScore(score);
+        
         // initial snake
         snake = [];
-        snake.push({ x: 0, y: 15 });
-        snake_next_dir = 1;
+        snake = [{ x: 10, y: 10 }]; // Start at a fixed position
+        snake_dir = 1; // Start moving to the right
+        snake_next_dir = 1; // Initialize next direction
+        snake_speed = 200;
+        
         // food on canvas
         addFood();
         // activate canvas event
@@ -223,6 +287,40 @@
             changeDir(evt.keyCode);
         }
         mainLoop();
+    }
+
+    /* Shooting Mechanism */
+    function shootBullet() {
+        const head = snake[0];
+        const bullet = {
+            x: head.x,
+            y: head.y,
+            dir: snake_dir
+        };
+        bullets.push(bullet);
+        ammo--;
+    }
+
+    function updateBullets() {
+        bullets.forEach((bullet, index) => {
+            switch (bullet.dir) {
+                case 0: bullet.y -= BULLET_SPEED; break; // Up
+                case 1: bullet.x += BULLET_SPEED; break; // Right
+                case 2: bullet.y += BULLET_SPEED; break; // Down
+                case 3: bullet.x -= BULLET_SPEED; break; // Left
+            }
+
+            // Check bullet collision with boss
+            if (boss && bullet.x >= boss.x && bullet.x < boss.x + BOSS_SIZE_MULTIPLIER &&
+                bullet.y >= boss.y && bullet.y < boss.y + BOSS_SIZE_MULTIPLIER) {
+                bullets.splice(index, 1);
+                boss.health--;
+                if (boss.health <= 0) {
+                    boss = null;
+                    alert("You win!");
+                }
+            }
+        });
     }
     
     /* Key Inputs and Actions */
