@@ -23,9 +23,9 @@
     const ele_score = document.getElementById("score_value");
     const ele_ammo = document.getElementById("ammo_value");
     const BLOCK = 20;
-    
+
     // food configurations (IMPORTANT)
-    const foodImage = new Image();                                           // create an image for the cookie
+    const foodImage = new Image();                                            // create an image for the cookie
     foodImage.src = "assets/images/cookie.svg";                               // path to the cookie
     foodImage.onload = () => console.log("cookie image loaded successfully"); // error handling
     foodImage.onerror = () => console.log("Failed to load cookie image");     // error handling
@@ -37,25 +37,25 @@
     let score = 0, wall = 1;
 
     // boss fight configs
-    let boss = null;       // is the boss spawned or not?
-    let lastGrowTime = 0;  // when the boss last grew
-    let ammo = 0;          // your ammo
-    let bullets = [];
-    let gameOver = false;  // did the game end?
-    let bossMoveCounter = 0; // Counter to control boss movement timing
-    const bossMusic = new Audio('assets/audio/boss_music.mp3'); // path to your boss music file
-    let bossSpawnTimer = null;  // Timer for spawning the boss
+    let boss = null;         // is the boss spawned or not?
+    let lastGrowTime = 0;    // when the boss last grew
+    let ammo = 0;            // your ammo
+    let bullets = [];        // bullets
+    let gameOver = false;    // did the game end?
+    let bossMoveCounter = 0; // counter to control boss movement timing
+    const bossMusic = new Audio('assets/audio/boss_music.mp3'); // boss music path
+    let bossSpawnTimer = null;  // timer for spawning the boss
 
     // other configs (IMPORTANT)
     const CONFIG = {
         FOOD_SCALE: 1, // cookie size
         BOSS: {
-            SIZE_MULTIPLIER: 2,  // boss size
-            INITIAL_HEALTH: 2,   // boss health
-            SPAWN_THRESHOLD: 2,  // how many cookies you need to eat before the boss spawns
-            GROW_INTERVAL: 2000, // boss grows every 2 secs
+            SIZE_MULTIPLIER: 2,   // boss size
+            INITIAL_HEALTH: 5,    // boss health
+            SPAWN_THRESHOLD: 2,   // how many cookies you need to eat before the boss spawns
+            GROW_INTERVAL: 2000,  // boss grows every 2 secs
             MAX_LENGTH: 20,       // boss max length
-            SPEED_MULTIPLIER: 0.5 // Boss moves at half the player's speed
+            SPEED_MULTIPLIER: 0.5 // boss speed multiplier (if 0.5, boss moves 1/2 speed of player)
         },
         BULLET: {
             SPEED: 2,         // bullet speed
@@ -73,11 +73,12 @@
     };
 
     const startBossMusic = () => {
-        bossMusic.play(); // Start the music immediately
-        // Start the 30-second delay for the boss to spawn
+        // start music, wait 30500 ms to spawn boss on beat drop
+        bossMusic.play();
+
         bossSpawnTimer = setTimeout(() => {
-            spawnBoss(); // Call the spawnBoss function after 30 seconds
-        }, 30500); // 30 seconds (30000 milliseconds)
+            spawnBoss();
+        }, 30500);
     };
 
     // create a random position on the board
