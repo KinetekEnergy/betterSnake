@@ -42,6 +42,9 @@
     let ammo = 0;          // your ammo
     let bullets = [];
     let gameOver = false;  // did the game end?
+    let bossMoveCounter = 0; // Counter to control boss movement timing
+    const bossMusic = new Audio('assets/audio/boss_music.mp3'); // path to your boss music file
+    let bossSpawnTimer = null;  // Timer for spawning the boss
 
     // other configs (IMPORTANT)
     const CONFIG = {
@@ -51,16 +54,14 @@
             INITIAL_HEALTH: 2,   // boss health
             SPAWN_THRESHOLD: 2,  // how many cookies you need to eat before the boss spawns
             GROW_INTERVAL: 2000, // boss grows every 2 secs
-            MAX_LENGTH: 20       // boss max length
+            MAX_LENGTH: 20,       // boss max length
+            SPEED_MULTIPLIER: 0.5 // Boss moves at half the player's speed
         },
         BULLET: {
             SPEED: 2,         // bullet speed
             AMMO_PER_FOOD: 3, // the number of bullets each cookie gives
         },
     };
-
-    const bossMusic = new Audio('assets/audio/boss_music.mp3'); // path to your boss music file
-    let bossSpawnTimer = null;  // Timer for spawning the boss
 
 
     // display the screen
@@ -126,10 +127,10 @@
         bullets.forEach((bullet, index) => {
             boss.body.forEach((part, partIndex) => {
                 if (checkCollision(bullet.x, bullet.y, part.x, part.y)) {
-                    bullets.splice(index, 1);
-                    boss.body.splice(partIndex, 1);
-                    if (boss.body.length <= 0) {
-                        boss = null;
+                    bullets.splice(index, 1); // Remove the bullet
+                    boss.health--; // Decrease boss health
+                    if (boss.health <= 0) {
+                        boss = null; // Remove the boss
                         bossMusic.pause(); // Stop the music when the boss is defeated
                         bossMusic.currentTime = 0; // Reset the music to the start
                         alert("You win!");
@@ -139,8 +140,14 @@
         });
     };
 
+
     const moveBoss = () => {
         if (!boss) return;
+
+        bossMoveCounter += CONFIG.BOSS.SPEED_MULTIPLIER;
+        if (bossMoveCounter < 1) return; // Skip this cycle if the threshold isn't met
+
+        bossMoveCounter = 0; // Reset the counter after moving
 
         const playerHead = snake[0];
         const predictedPlayerPos = {
@@ -350,6 +357,9 @@
         if (boss && snake.some(snakePart =>
             boss.body.some(bossPart =>
                 checkCollision(snakePart.x, snakePart.y, bossPart.x, bossPart.y)))) {
+            boss = null;
+            bossMusic.pause(); // Stop the music when the boss is defeated
+            bossMusic.currentTime = 0; // Reset the music to the start
             return showScreen(SCREENS.GAME_OVER);
         }
 
