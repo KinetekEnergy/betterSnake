@@ -128,6 +128,7 @@
 
 
     // move boss towards player
+    // move boss towards player
     const moveBoss = () => {
         if (!boss) return;
 
@@ -135,11 +136,12 @@
         let moveX = 0;
         let moveY = 0;
 
-        // Move boss towards player without diagonal movement
-        if (playerHead.x < boss.x) moveX = -1;
-        if (playerHead.x > boss.x) moveX = 1;
-        if (playerHead.y < boss.y) moveY = -1;
-        if (playerHead.y > boss.y) moveY = 1;
+        // Calculate movement direction based on player position
+        if (playerHead.x < boss.x) moveX = -1; // Move left
+        else if (playerHead.x > boss.x) moveX = 1; // Move right
+
+        if (playerHead.y < boss.y) moveY = -1; // Move up
+        else if (playerHead.y > boss.y) moveY = 1; // Move down
 
         // Boss should avoid hitting walls or itself
         if (moveX > 0 && boss.x + boss.body.length >= canvas.width / BLOCK) moveX = 0;
@@ -147,12 +149,23 @@
         if (moveY > 0 && boss.y + boss.body.length >= canvas.height / BLOCK) moveY = 0;
         if (moveY < 0 && boss.y <= 0) moveY = 0;
 
+        // Ensure the boss moves in only one direction (no diagonal movement)
+        if (moveX !== 0 && moveY !== 0) {
+            // If both directions are non-zero, prioritize the x or y axis
+            if (Math.abs(playerHead.x - boss.x) > Math.abs(playerHead.y - boss.y)) {
+                moveY = 0; // Prevent diagonal movement by canceling y movement
+            } else {
+                moveX = 0; // Prevent diagonal movement by canceling x movement
+            }
+        }
+
         // Move the entire boss body in the direction of the player
         for (let i = boss.body.length - 1; i > 0; i--) {
             boss.body[i] = { ...boss.body[i - 1] };
         }
         boss.body[0] = { x: boss.body[0].x + moveX, y: boss.body[0].y + moveY };
     };
+
 
     // boss gets longer
     const growBossPeriodically = () => {
