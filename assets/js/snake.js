@@ -122,6 +122,7 @@
         drawBossHealthBar();
     };
 
+    // checking if bullets hit the boss
     const handleBulletCollisions = () => {
         if (!boss) return;
 
