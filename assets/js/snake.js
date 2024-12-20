@@ -23,7 +23,7 @@
     const ele_score = document.getElementById("score_value");
     const ele_ammo = document.getElementById("ammo_value");
     const BLOCK = 20;
-
+    
     // food configurations (IMPORTANT)
     const foodImage = new Image();                                           // create an image for the cookie
     foodImage.src = "assets/images/cookie.svg";                               // path to the cookie
@@ -137,12 +137,6 @@
                 }
             });
         });
-    };
-
-    const checkForBossSpawn = () => {
-        if (score >= 3 && !boss) { // Example condition to trigger boss spawn
-            startBossMusic(); // Start the music and initiate the boss spawn countdown
-        }
     };
 
     const moveBoss = () => {
@@ -291,6 +285,8 @@
                 boss.health--;
                 if (boss.health <= 0) {
                     boss = null;
+                    bossMusic.pause(); // Stop the music when the boss is defeated
+                    bossMusic.currentTime = 0; // Reset the music to the start
                     alert("You win!");
                 }
             }
@@ -306,8 +302,13 @@
 
     // Main game loop
     const mainLoop = () => {
-        if (gameOver) return; // if the game ends, stop updating
-
+        if (gameOver) {
+            console.log("game over");
+            boss = null;
+            bossMusic.pause();
+            bossMusic.currentTime = 0;
+            return;
+        }
         // Move snake and check collisions
         snake_dir = snake_next_dir;
         let { x, y } = snake[0];
@@ -322,17 +323,26 @@
 
         // if you hit a wall, you die
         if (wall && (x < 0 || x >= canvas.width / BLOCK || y < 0 || y >= canvas.height / BLOCK)) {
+            boss = null;
+            bossMusic.pause(); // Stop the music when the boss is defeated
+            bossMusic.currentTime = 0; // Reset the music to the start
             return showScreen(SCREENS.GAME_OVER);
         }
 
         // if you hit yourself, you die
         if (snake.slice(1).some(part => checkCollision(part.x, part.y, x, y))) {
+            boss = null;
+            bossMusic.pause(); // Stop the music when the boss is defeated
+            bossMusic.currentTime = 0; // Reset the music to the start
             return showScreen(SCREENS.GAME_OVER);
         }
 
         // Check for collisions with any part of the boss's body
         if (boss && boss.body.some(bossPart =>
             checkCollision(x, y, bossPart.x, bossPart.y))) {
+            boss = null;
+            bossMusic.pause(); // Stop the music when the boss is defeated
+            bossMusic.currentTime = 0; // Reset the music to the start
             return showScreen(SCREENS.GAME_OVER);
         }
 
