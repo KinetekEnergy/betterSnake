@@ -9,13 +9,6 @@ SHELL = /bin/bash -c
 # Phony Targets, makefile housekeeping for below definitions
 .PHONY: default server convert clean stop
 
-# List all .ipynb files in the _notebooks directory
-NOTEBOOK_FILES := $(shell find _notebooks -name '*.ipynb')
-
-# Specify the target directory for the converted Markdown files
-DESTINATION_DIRECTORY = _posts
-MARKDOWN_FILES := $(patsubst _notebooks/%.ipynb,$(DESTINATION_DIRECTORY)/%_IPYNB_2_.md,$(NOTEBOOK_FILES))
-
 # Call server, then verify and start logging
 default: server
 	@echo "Terminal logging starting, watching server..."
@@ -57,28 +50,10 @@ server: stop convert
 		echo "Server PID: $$PID"
 	@@until [ -f $(LOG_FILE) ]; do sleep 1; done
 
-# Convert .ipynb files to Markdown with front matter
-convert: $(MARKDOWN_FILES)
-
-# Convert .ipynb files to Markdown with front matter, preserving directory structure
-$(DESTINATION_DIRECTORY)/%_IPYNB_2_.md: _notebooks/%.ipynb
-	@echo "Converting source $< to destination $@"
-	@mkdir -p $(@D)
-	@python -c 'import sys; from scripts.convert_notebooks import convert_single_notebook; convert_single_notebook(sys.argv[1])' "$<"
-
 # Clean up project derived files
 clean: stop
-	@echo "Cleaning converted IPYNB files..."
-	@find _posts -type f -name '*_IPYNB_2_.md' -exec rm {} +
-	@echo "Cleaning Github Issue files..."
-	@find _posts -type f -name '*_GithubIssue_.md' -exec rm {} +
-	@echo "Removing empty directories in _posts..."
-	@while [ $$(find _posts -type d -empty | wc -l) -gt 0 ]; do \
-		find _posts -type d -empty -exec rmdir {} +; \
-	done
 	@echo "Removing _site directory..."
 	@rm -rf _site
-
 
 # Stop the server and kill processes
 stop:
