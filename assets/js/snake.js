@@ -25,10 +25,10 @@
     const BLOCK = 10;
 
     // food configurations (IMPORTANT)
-    const foodImage = new Image();                                           // create an image for the mango
-    foodImage.src = "assets/images/mango.svg";                               // path to the mango
-    foodImage.onload = () => console.log("Mango image loaded successfully"); // error handling
-    foodImage.onerror = () => console.log("Failed to load mango image");     // error handling
+    const foodImage = new Image();                                           // create an image for the cookie
+    foodImage.src = "assets/images/cookie.svg";                               // path to the cookie
+    foodImage.onload = () => console.log("cookie image loaded successfully"); // error handling
+    foodImage.onerror = () => console.log("Failed to load cookie image");     // error handling
 
     // snake controls and other stuff
     let SCREEN = SCREENS.MENU;
@@ -46,17 +46,17 @@
 
     // other configs (IMPORTANT)
     const CONFIG = {
-        FOOD_SCALE: 1, // mango size
+        FOOD_SCALE: 1.3, // cookie size
         BOSS: {
             SIZE_MULTIPLIER: 2,  // boss size
             INITIAL_HEALTH: 2,   // boss health
-            SPAWN_THRESHOLD: 2,  // how many mangos you need to eat before the boss spawns
+            SPAWN_THRESHOLD: 2,  // how many cookies you need to eat before the boss spawns
             GROW_INTERVAL: 2000, // boss grows every 2 secs
             MAX_LENGTH: 20       // boss max length
         },
         BULLET: {
             SPEED: 2,         // bullet speed
-            AMMO_PER_FOOD: 3, // the number of bullets each mango gives
+            AMMO_PER_FOOD: 3, // the number of bullets each cookie gives
         },
     };
 
@@ -241,7 +241,7 @@
 
     /* Main Game Logic */
 
-    // Function to draw food with the mango image
+    // Function to draw food with the cookie image
     const drawFood = () => {
         ctx.drawImage(foodImage, food.x * BLOCK, food.y * BLOCK, BLOCK * CONFIG.FOOD_SCALE, BLOCK * CONFIG.FOOD_SCALE);
     };
@@ -281,7 +281,7 @@
         snake.pop();
         snake.unshift({ x, y });
 
-        // check if you collided with a mango; if so, do the following...
+        // check if you collided with a cookie; if so, do the following...
         if (checkCollision(x, y, food.x, food.y)) {
             ammo += CONFIG.BULLET.AMMO_PER_FOOD; // add your ammo
             updateScore(score++);                // update your score
