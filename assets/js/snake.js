@@ -60,12 +60,24 @@
         },
     };
 
+    const bossMusic = new Audio('assets/audio/boss_music.mp3'); // path to your boss music file
+    let bossSpawnTimer = null;  // Timer for spawning the boss
+
+
     // display the screen
     const showScreen = (screen) => {
         SCREEN = screen;
         Object.keys(screenElements).forEach(key => {
             screenElements[key].style.display = key == screen ? "block" : "none";
         });
+    };
+
+    const startBossMusic = () => {
+        bossMusic.play(); // Start the music immediately
+        // Start the 30-second delay for the boss to spawn
+        bossSpawnTimer = setTimeout(() => {
+            spawnBoss(); // Call the spawnBoss function after 30 seconds
+        }, 30500); // 30 seconds (30000 milliseconds)
     };
 
     // create a random position on the board
@@ -89,8 +101,9 @@
 
     // spawn the boss at a random position and use the configs at the top. make the health bar
     const spawnBoss = () => {
-        if (boss) return;
+        if (boss) return; // Don't spawn the boss if it's already spawned
 
+        // Spawn the boss (same logic as before)
         const x = Math.floor(canvas.width / 2 / BLOCK);
         const y = Math.floor(canvas.height / 2 / BLOCK);
         boss = {
@@ -105,7 +118,6 @@
         };
 
         lastGrowTime = Date.now();
-
         drawBossHealthBar();
     };
 
@@ -119,6 +131,8 @@
                     boss.body.splice(partIndex, 1);
                     if (boss.body.length <= 0) {
                         boss = null;
+                        bossMusic.pause(); // Stop the music when the boss is defeated
+                        bossMusic.currentTime = 0; // Reset the music to the start
                         alert("You win!");
                     }
                 }
@@ -126,16 +140,21 @@
         });
     };
 
+    const checkForBossSpawn = () => {
+        if (score >= 3 && !boss) { // Example condition to trigger boss spawn
+            startBossMusic(); // Start the music and initiate the boss spawn countdown
+        }
+    };
 
     const moveBoss = () => {
         if (!boss) return;
-    
+
         const playerHead = snake[0];
         const predictedPlayerPos = {
             x: playerHead.x,
             y: playerHead.y
         };
-    
+
         // Predict where the player is heading based on their direction
         switch (snake_dir) {
             case 0: predictedPlayerPos.y -= 2; break; // Up
@@ -143,36 +162,36 @@
             case 2: predictedPlayerPos.y += 2; break; // Down
             case 3: predictedPlayerPos.x -= 2; break; // Left
         }
-    
+
         // Calculate distances to both current and predicted positions
         const distToCurrent = Math.abs(boss.x - playerHead.x) + Math.abs(boss.y - playerHead.y);
         const distToPredicted = Math.abs(boss.x - predictedPlayerPos.x) + Math.abs(boss.y - predictedPlayerPos.y);
-    
+
         // Choose target based on which position is better for interception
         const targetPos = distToPredicted < distToCurrent ? predictedPlayerPos : playerHead;
-    
+
         // Calculate movement direction with border avoidance
         let moveX = 0;
         let moveY = 0;
-    
+
         // Determine optimal movement direction
         if (targetPos.x < boss.x) moveX = -1;
         else if (targetPos.x > boss.x) moveX = 1;
-    
+
         if (targetPos.y < boss.y) moveY = -1;
         else if (targetPos.y > boss.y) moveY = 1;
-    
+
         // Border avoidance logic
         const borderBuffer = 3; // Increased buffer for smoother border avoidance
         const maxWidth = canvas.width / BLOCK;
         const maxHeight = canvas.height / BLOCK;
-    
+
         // Check if too close to borders and adjust movement
         if (boss.x + moveX <= borderBuffer) moveX = 1;
         if (boss.x + moveX >= maxWidth - borderBuffer) moveX = -1;
         if (boss.y + moveY <= borderBuffer) moveY = 1;
         if (boss.y + moveY >= maxHeight - borderBuffer) moveY = -1;
-    
+
         // Additional check to prevent getting stuck in corners
         if (boss.x <= borderBuffer && boss.y <= borderBuffer) {
             moveX = 1;
@@ -187,30 +206,30 @@
             moveX = -1;
             moveY = -1;
         }
-    
+
         // Ensure smooth movement by prioritizing the direction with larger distance
         if (moveX !== 0 && moveY !== 0) {
             const xDist = Math.abs(targetPos.x - boss.x);
             const yDist = Math.abs(targetPos.y - boss.y);
-            
+
             if (xDist > yDist) {
                 moveY = 0;
             } else {
                 moveX = 0;
             }
         }
-    
+
         // Move the boss body
         for (let i = boss.body.length - 1; i > 0; i--) {
             boss.body[i] = { ...boss.body[i - 1] };
         }
-        
+
         // Update boss head position
-        boss.body[0] = { 
+        boss.body[0] = {
             x: boss.body[0].x + moveX,
             y: boss.body[0].y + moveY
         };
-    
+
         // Update boss reference position
         boss.x = boss.body[0].x;
         boss.y = boss.body[0].y;
@@ -313,14 +332,14 @@
         }
 
         // Check for collisions with any part of the boss's body
-        if (boss && boss.body.some(bossPart => 
+        if (boss && boss.body.some(bossPart =>
             checkCollision(x, y, bossPart.x, bossPart.y))) {
             return showScreen(SCREENS.GAME_OVER);
         }
 
         // Also check existing snake body against boss parts
-        if (boss && snake.some(snakePart => 
-            boss.body.some(bossPart => 
+        if (boss && snake.some(snakePart =>
+            boss.body.some(bossPart =>
                 checkCollision(snakePart.x, snakePart.y, bossPart.x, bossPart.y)))) {
             return showScreen(SCREENS.GAME_OVER);
         }
@@ -336,7 +355,6 @@
             updateAmmo(ammo);                    // update your ammo
             addFood();                           // spawn a new food
             snake.push({ x: snake[snake.length - 1].x, y: snake[snake.length - 1].y }); // make snake longer
-            if (score === CONFIG.BOSS.SPAWN_THRESHOLD && !boss) spawnBoss(); // if you hit food threshold, spawn boss
         }
 
         // snake and boss movement
@@ -386,7 +404,17 @@
 
     // create a new game
     const newGame = () => {
-        // show the game screen
+        // Reset the spawn timer if there's one
+        if (bossSpawnTimer) {
+            clearTimeout(bossSpawnTimer);
+            bossSpawnTimer = null;
+        }
+
+        // Stop the boss music if it's playing
+        bossMusic.pause();
+        bossMusic.currentTime = 0; // Reset music to the start
+
+        // Show the game screen
         showScreen(SCREENS.SNAKE);
 
         // configure the snake
@@ -404,7 +432,9 @@
         updateScore(score);
         updateAmmo(ammo);
         addFood();
+        startBossMusic();
         mainLoop();
+
     };
 
     /* Initialization */
