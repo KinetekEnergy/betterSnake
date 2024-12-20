@@ -129,53 +129,93 @@
 
     const moveBoss = () => {
         if (!boss) return;
-
+    
         const playerHead = snake[0];
+        const predictedPlayerPos = {
+            x: playerHead.x,
+            y: playerHead.y
+        };
+    
+        // Predict where the player is heading based on their direction
+        switch (snake_dir) {
+            case 0: predictedPlayerPos.y -= 2; break; // Up
+            case 1: predictedPlayerPos.x += 2; break; // Right
+            case 2: predictedPlayerPos.y += 2; break; // Down
+            case 3: predictedPlayerPos.x -= 2; break; // Left
+        }
+    
+        // Calculate distances to both current and predicted positions
+        const distToCurrent = Math.abs(boss.x - playerHead.x) + Math.abs(boss.y - playerHead.y);
+        const distToPredicted = Math.abs(boss.x - predictedPlayerPos.x) + Math.abs(boss.y - predictedPlayerPos.y);
+    
+        // Choose target based on which position is better for interception
+        const targetPos = distToPredicted < distToCurrent ? predictedPlayerPos : playerHead;
+    
+        // Calculate movement direction with border avoidance
         let moveX = 0;
         let moveY = 0;
-
-        // Calculate movement direction based on player position
-        if (playerHead.x < boss.x) moveX = -1; // Move left
-        else if (playerHead.x > boss.x) moveX = 1; // Move right
-
-        if (playerHead.y < boss.y) moveY = -1; // Move up
-        else if (playerHead.y > boss.y) moveY = 1; // Move down
-
-        // Check if moving in X direction would hit a wall
-        const willHitWallX = (moveX > 0 && boss.x + boss.body.length >= canvas.width / BLOCK) ||
-            (moveX < 0 && boss.x <= 0);
-
-        // Check if moving in Y direction would hit a wall
-        const willHitWallY = (moveY > 0 && boss.y + boss.body.length >= canvas.height / BLOCK) ||
-            (moveY < 0 && boss.y <= 0);
-
-        // If moving in X direction would hit a wall, prevent X movement
-        if (willHitWallX) moveX = 0;
-
-        // If moving in Y direction would hit a wall, prevent Y movement
-        if (willHitWallY) moveY = 0;
-
-        // If both directions are blocked, prioritize the direction that avoids the wall
-        if (moveX === 0 && moveY === 0) {
-            if (!willHitWallX) moveX = Math.sign(playerHead.x - boss.x); // Move towards player horizontally
-            if (!willHitWallY) moveY = Math.sign(playerHead.y - boss.y); // Move towards player vertically
+    
+        // Determine optimal movement direction
+        if (targetPos.x < boss.x) moveX = -1;
+        else if (targetPos.x > boss.x) moveX = 1;
+    
+        if (targetPos.y < boss.y) moveY = -1;
+        else if (targetPos.y > boss.y) moveY = 1;
+    
+        // Border avoidance logic
+        const borderBuffer = 3; // Increased buffer for smoother border avoidance
+        const maxWidth = canvas.width / BLOCK;
+        const maxHeight = canvas.height / BLOCK;
+    
+        // Check if too close to borders and adjust movement
+        if (boss.x + moveX <= borderBuffer) moveX = 1;
+        if (boss.x + moveX >= maxWidth - borderBuffer) moveX = -1;
+        if (boss.y + moveY <= borderBuffer) moveY = 1;
+        if (boss.y + moveY >= maxHeight - borderBuffer) moveY = -1;
+    
+        // Additional check to prevent getting stuck in corners
+        if (boss.x <= borderBuffer && boss.y <= borderBuffer) {
+            moveX = 1;
+            moveY = 1;
+        } else if (boss.x <= borderBuffer && boss.y >= maxHeight - borderBuffer) {
+            moveX = 1;
+            moveY = -1;
+        } else if (boss.x >= maxWidth - borderBuffer && boss.y <= borderBuffer) {
+            moveX = -1;
+            moveY = 1;
+        } else if (boss.x >= maxWidth - borderBuffer && boss.y >= maxHeight - borderBuffer) {
+            moveX = -1;
+            moveY = -1;
         }
-
-        // Ensure that the boss moves in only one direction (no diagonal movement)
+    
+        // Ensure smooth movement by prioritizing the direction with larger distance
         if (moveX !== 0 && moveY !== 0) {
-            if (Math.abs(playerHead.x - boss.x) > Math.abs(playerHead.y - boss.y)) {
-                moveY = 0; // Prioritize horizontal movement
+            const xDist = Math.abs(targetPos.x - boss.x);
+            const yDist = Math.abs(targetPos.y - boss.y);
+            
+            if (xDist > yDist) {
+                moveY = 0;
             } else {
-                moveX = 0; // Prioritize vertical movement
+                moveX = 0;
             }
         }
-
-        // Move the entire boss body in the chosen direction
+    
+        // Move the boss body
         for (let i = boss.body.length - 1; i > 0; i--) {
             boss.body[i] = { ...boss.body[i - 1] };
         }
-        boss.body[0] = { x: boss.body[0].x + moveX, y: boss.body[0].y + moveY };
+        
+        // Update boss head position
+        boss.body[0] = { 
+            x: boss.body[0].x + moveX,
+            y: boss.body[0].y + moveY
+        };
+    
+        // Update boss reference position
+        boss.x = boss.body[0].x;
+        boss.y = boss.body[0].y;
     };
+
 
 
 
@@ -272,9 +312,17 @@
             return showScreen(SCREENS.GAME_OVER);
         }
 
-        // Check for collision with the boss (any part of the boss)
-        if (boss && boss.body.some(bossPart => checkCollision(x, y, bossPart.x, bossPart.y))) {
-            return showScreen(SCREENS.GAME_OVER); // End the game if you hit any part of the boss
+        // Check for collisions with any part of the boss's body
+        if (boss && boss.body.some(bossPart => 
+            checkCollision(x, y, bossPart.x, bossPart.y))) {
+            return showScreen(SCREENS.GAME_OVER);
+        }
+
+        // Also check existing snake body against boss parts
+        if (boss && snake.some(snakePart => 
+            boss.body.some(bossPart => 
+                checkCollision(snakePart.x, snakePart.y, bossPart.x, bossPart.y)))) {
+            return showScreen(SCREENS.GAME_OVER);
         }
 
         // snake movement
