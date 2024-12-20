@@ -48,8 +48,8 @@
     const CONFIG = {
         FOOD_SCALE: 1, // mango size
         BOSS: {
-            //SIZE_MULTIPLIER: 2,  // boss size
-            //INITIAL_HEALTH: 2,   // boss health
+            SIZE_MULTIPLIER: 2,  // boss size
+            INITIAL_HEALTH: 2,   // boss health
             SPAWN_THRESHOLD: 2,  // how many mangos you need to eat before the boss spawns
             GROW_INTERVAL: 2000, // boss grows every 2 secs
             MAX_LENGTH: 20       // boss max length
@@ -105,6 +105,8 @@
         };
 
         lastGrowTime = Date.now();
+
+        drawBossHealthBar();
     };
 
     const handleBulletCollisions = () => {
@@ -171,17 +173,13 @@
 
     // function to draw the health bar and display the health percentage
     const drawBossHealthBar = () => {
-        if (!boss) return;
-
-        const healthBarWidth = 100;
-        const healthBarHeight = 10;
-        const xPos = canvas.width - healthBarWidth - 10;
-        const yPos = 10;
-        const healthPercentage = 1;
-
-        drawRect(xPos, yPos, healthBarWidth, healthBarHeight, "gray");
-        drawRect(xPos, yPos, healthBarWidth * healthPercentage, healthBarHeight, "green");
+        const healthPercentage = Math.max(0, (boss.health / CONFIG.BOSS.INITIAL_HEALTH) * 100);
+        drawRect(0.1, 0.1, healthPercentage / 10, 1, "red");
+        ctx.fillStyle = "white";
+        ctx.font = "10px Arial";
+        ctx.fillText(`${boss.health}/${CONFIG.BOSS.INITIAL_HEALTH}`, 10, 20);
     };
+
 
 
     // draw the alternating grid in the background
