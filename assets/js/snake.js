@@ -230,23 +230,27 @@
     let changeDir = function (key) {
         // test key and switch direction
         switch (key) {
-            case 37:    // left arrow
-                if (snake_dir !== 1)    // not right
+            case 37: // left arrow
+            case 65: // 'A'
+                if (snake_dir !== 1) // not right
                     snake_next_dir = 3; // then switch left
                 break;
-            case 38:    // up arrow
-                if (snake_dir !== 2)    // not down
+            case 38: // up arrow
+            case 87: // 'W'
+                if (snake_dir !== 2) // not down
                     snake_next_dir = 0; // then switch up
                 break;
-            case 39:    // right arrow
-                if (snake_dir !== 3)    // not left
+            case 39: // right arrow
+            case 68: // 'D'
+                if (snake_dir !== 3) // not left
                     snake_next_dir = 1; // then switch right
                 break;
-            case 40:    // down arrow
-                if (snake_dir !== 0)    // not up
+            case 40: // down arrow
+            case 83: // 'S'
+                if (snake_dir !== 0) // not up
                     snake_next_dir = 2; // then switch down
                 break;
-        }
+        }        
     }
     
     /* Dot for Food or Snake part */
