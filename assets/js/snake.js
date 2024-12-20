@@ -22,7 +22,7 @@
     // score and ammo
     const ele_score = document.getElementById("score_value");
     const ele_ammo = document.getElementById("ammo_value");
-    const BLOCK = 10;
+    const BLOCK = 20;
 
     // food configurations (IMPORTANT)
     const foodImage = new Image();                                           // create an image for the cookie
@@ -42,11 +42,10 @@
     let ammo = 0;          // your ammo
     let bullets = [];
     let gameOver = false;  // did the game end?
-    const bossSpeed = 1;  // Same speed as the player
 
     // other configs (IMPORTANT)
     const CONFIG = {
-        FOOD_SCALE: 1.3, // cookie size
+        FOOD_SCALE: 1, // cookie size
         BOSS: {
             SIZE_MULTIPLIER: 2,  // boss size
             INITIAL_HEALTH: 2,   // boss health
